@@ -48,71 +48,97 @@
 
 ########################################################################################################################################
 
+# import os
+# import collections
+
+# import msgpack
+# import numpy as np
+
+
+# PLData = collections.namedtuple("PLData", ["data", "timestamps", "topics"])
+
+
+# def serialized_dict_from_msgpack_bytes(data):
+#     return msgpack.unpackb(
+#         data, raw=False, use_list=False, ext_hook=msgpack_unpacking_ext_hook,
+#     )
+
+
+# def msgpack_unpacking_ext_hook(self, code, data):
+#     SERIALIZED_DICT_MSGPACK_EXT_CODE = 13
+#     if code == SERIALIZED_DICT_MSGPACK_EXT_CODE:
+#         return serialized_dict_from_msgpack_bytes(data)
+#     return msgpack.ExtType(code, data)
+
+
+# def load_pldata_file(directory, topic):
+#     ts_file = os.path.join(directory, topic + "_timestamps.npy")
+#     msgpack_file = os.path.join(directory, topic + ".pldata")
+#     try:
+#         data = []
+#         topics = []
+#         data_ts = np.load(ts_file)
+#         with open(msgpack_file, "rb") as fh:
+#             for topic, payload in msgpack.Unpacker(fh, raw=False, use_list=False):
+#                 datum = serialized_dict_from_msgpack_bytes(payload)
+#                 data.append(datum)
+#                 topics.append(topic)
+#     except FileNotFoundError:
+#         data = []
+#         data_ts = []
+#         topics = []
+
+#     return PLData(data, data_ts, topics)
+
+
+# if __name__ == "__main__":
+
+#     # edit `path` s.t. it points to your recording
+#     #path = "/Users/me/recordings/2020_06_19/001"
+#     path = '/Users/azamatkaibaldiyev/GREYC_project/Pupil_labs/pupil/recordings/2024_01_16/001'
+
+#     # Read "gaze.pldata" and "gaze_timestamps.npy" data
+#     get_data = load_pldata_file(path, "gaze")
+
+#     data_gaze = get_data.data
+#     data_ts = get_data.timestamps
+#     topics = get_data.topics
+
+#     import pprint
+
+#     p = pprint.PrettyPrinter(indent=4)
+
+#     print(">>> FIRST GAZE TIMESTAMP:")
+#     p.pprint(data_ts[0])
+#     print()
+
+#     print(">>> FIRST GAZE DATUM:")
+#     p.pprint(data_gaze[0])
+#     print()
+
+import time
+
+import pandas as pd
+
+def read_tlv_file(file_path):
+    df = pd.read_csv(file_path, header = 0, delimiter='\t')
+    #print(df.head())
+    print(df['Gaze2dX'][:5])
+
+# Example usage
+start_time = time.time()
+read_tlv_file("/home/kaibald231/work_pupil/pupil_mobile/Test_recording/Test_video/exports/000/iMotions_12_02_2024_09_54_24/gaze.tlv")
+end_time = time.time()
+
+print(f"Video cutting took: {end_time - start_time:.2f} seconds")
+
+
 import os
-import collections
 
-import msgpack
-import numpy as np
-
-
-PLData = collections.namedtuple("PLData", ["data", "timestamps", "topics"])
+# Get the current working directory
+current_dir = os.getcwd()
+file_path = os.path.abspath(os.path.join(current_dir, '..', '..', 'file.txt'))
 
 
-def serialized_dict_from_msgpack_bytes(data):
-    return msgpack.unpackb(
-        data, raw=False, use_list=False, ext_hook=msgpack_unpacking_ext_hook,
-    )
-
-
-def msgpack_unpacking_ext_hook(self, code, data):
-    SERIALIZED_DICT_MSGPACK_EXT_CODE = 13
-    if code == SERIALIZED_DICT_MSGPACK_EXT_CODE:
-        return serialized_dict_from_msgpack_bytes(data)
-    return msgpack.ExtType(code, data)
-
-
-def load_pldata_file(directory, topic):
-    ts_file = os.path.join(directory, topic + "_timestamps.npy")
-    msgpack_file = os.path.join(directory, topic + ".pldata")
-    try:
-        data = []
-        topics = []
-        data_ts = np.load(ts_file)
-        with open(msgpack_file, "rb") as fh:
-            for topic, payload in msgpack.Unpacker(fh, raw=False, use_list=False):
-                datum = serialized_dict_from_msgpack_bytes(payload)
-                data.append(datum)
-                topics.append(topic)
-    except FileNotFoundError:
-        data = []
-        data_ts = []
-        topics = []
-
-    return PLData(data, data_ts, topics)
-
-
-if __name__ == "__main__":
-
-    # edit `path` s.t. it points to your recording
-    #path = "/Users/me/recordings/2020_06_19/001"
-    path = '/Users/azamatkaibaldiyev/GREYC_project/Pupil_labs/pupil/recordings/2024_01_16/001'
-
-    # Read "gaze.pldata" and "gaze_timestamps.npy" data
-    get_data = load_pldata_file(path, "gaze")
-
-    data_gaze = get_data.data
-    data_ts = get_data.timestamps
-    topics = get_data.topics
-
-    import pprint
-
-    p = pprint.PrettyPrinter(indent=4)
-
-    print(">>> FIRST GAZE TIMESTAMP:")
-    p.pprint(data_ts[0])
-    print()
-
-    print(">>> FIRST GAZE DATUM:")
-    p.pprint(data_gaze[0])
-    print()
-
+### ACTIVATE PUPIL_VENV
+# source ~/work_pupil/pupil/pupil_env/bin/activate

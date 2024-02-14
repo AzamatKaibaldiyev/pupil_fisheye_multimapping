@@ -1,5 +1,3 @@
-# Density map
-
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
@@ -8,6 +6,7 @@ import os
 from wand.api import library
 from wand.image import Image
 from wand.color import Color
+import sys
 
 
 def process_data(tsv_file_path, image_size):
@@ -20,6 +19,7 @@ def process_data(tsv_file_path, image_size):
     data = data[(data[:, 0] >= 0) & (data[:, 0] < image_size[1]) & (data[:, 1] >= 0) & (data[:, 1] < image_size[0])]
 
     return data
+
 
 def create_density_map(tsv_file_path, output_path_density_map, path_referenceImage, output_path_expansion_map):
 
@@ -54,18 +54,18 @@ def create_density_map(tsv_file_path, output_path_density_map, path_referenceIma
                     density_map[i, j] += 1
 
 
-    # # Step 3: Overlay the Density Map on the Image
-    # # Normalize the density map for overlay
-    # density_map_normalized = cv2.normalize(density_map, None, 0, 255, cv2.NORM_MINMAX)
+    # Step 3: Overlay the Density Map on the Image
+    # Normalize the density map for overlay
+    density_map_normalized = cv2.normalize(density_map, None, 0, 255, cv2.NORM_MINMAX)
 
-    # # Convert density map to 3 channels (for RGB)
-    # density_map_colored = cv2.applyColorMap(np.uint8(density_map_normalized), cv2.COLORMAP_JET)
+    # Convert density map to 3 channels (for RGB)
+    density_map_colored = cv2.applyColorMap(np.uint8(density_map_normalized), cv2.COLORMAP_JET)
 
-    # # Overlay the density map on top of the image with transparency
-    # overlay = cv2.addWeighted(image, 0.5, density_map_colored, 0.5, 0)
+    # Overlay the density map on top of the image with transparency
+    overlay = cv2.addWeighted(image, 0.5, density_map_colored, 0.5, 0)
 
-    # # Save the overlaid image
-    # cv2.imwrite(output_path_density_map , overlay)
+    # Save the overlaid image
+    cv2.imwrite(output_path_density_map , overlay)
 
     # Creating the expansion map
     inflation_coords = find_inflation_points(density_map_orig)
@@ -79,7 +79,6 @@ def project_array_to_pixel(coords ,step, square_size, height, width):
         return np.transpose(np.array([(min(height, y_val*step)+square_size/2, min(width, x_val*step)+square_size/2) for y_val,x_val in zip(y,x)]))
     else:
         return np.array((min(height, y[0]*step)+square_size/2, min(width, x[0]*step)+square_size/2))
-
 
 
 def find_inflation_points(density_map_orig):
@@ -165,7 +164,6 @@ def find_inflation_points(density_map_orig):
     return inflation_points
 
 
-
 def create_inflation_map(image, path_referenceImage, inflation_coords, output_path_expansion_map, height, width):
 
     with Image(filename=path_referenceImage) as img:
@@ -247,67 +245,6 @@ def create_inflation_map(image, path_referenceImage, inflation_coords, output_pa
 
         img.save(filename=output_path_expansion_map)
 
-# def create_inflation_map(image, path_referenceImage, inflation_coords, output_path_expansion_map, height, width):
-
-#         highest_magn = inflation_coords[-1][0]
-#         for i, (magnitude, coords) in enumerate(inflation_coords):
-#             if i == 0:
-#                 file_path = path_referenceImage
-#             else:
-#                 file_path = output_path_expansion_map
-
-#             y,x = coords
-#             if coords.shape!=(2,):
-#                 for y_coord, x_coord in zip(y, x):
-#                     with Image(filename=file_path) as img:
-#                         #print(f"{y_coord/height:.3f},{x_coord/width:.3f}")
-
-#                         # with Image(filename=path_referenceImage) as img:
-#                         # Grab image size
-#                         cols, rows = img.size
-#                         # Define our target location ... say 1/3rd, by 1/5th
-#                         ty, tx = int(y_coord), int(y_coord)
-#                         # Find middle of the image.
-#                         mx, my = cols // 2, rows // 2
-#                         # Roll target coord into middle
-#                         ok = library.MagickRollImage(img.wand, mx-tx, my-ty)
-#                         if not ok:
-#                             img.raise_exception()
-#                         # Implode
-#                         img.implode(-magnitude/highest_magn)
-#                         # Roll middle back into place.
-#                         ok = library.MagickRollImage(img.wand, mx+tx, my+ty)
-#                         if not ok:
-#                             img.raise_exception()
-#                         # done
-#                         img.save(filename=output_path_expansion_map)
-
-#             else:
-#                 with Image(filename=file_path) as img:
-#                     #print(f"{y/height:.3f}, {x/width:.3f}")
-
-#                     # with Image(filename=path_referenceImage) as img:
-#                     # Grab image size
-#                     cols, rows = img.size
-#                     # Define our target location ... say 1/3rd, by 1/5th
-#                     ty, tx = int(y), int(x)
-#                     # Find middle of the image.
-#                     mx, my = cols // 2, rows // 2
-#                     # Roll target coord into middle
-#                     ok = library.MagickRollImage(img.wand, mx-tx, my-ty)
-#                     if not ok:
-#                         img.raise_exception()
-#                     # Implode
-#                     img.implode(-magnitude/highest_magn)
-#                     # Roll middle back into place.
-#                     ok = library.MagickRollImage(img.wand, mx+tx, my+ty)
-#                     if not ok:
-#                         img.raise_exception()
-#                     # done
-#                     img.save(filename=output_path_expansion_map)
-
-
-
 
 # def create_line_map(data):
 
@@ -334,7 +271,6 @@ def create_inflation_map(image, path_referenceImage, inflation_coords, output_pa
 #     # cv2.waitKey(0)
 #     # cv2.destroyAllWindows()
 
-
 #     # # Draw growing circles at each point
 #     # r_max = 40
 #     # r_step = r_max/len(data_int)
@@ -355,34 +291,16 @@ def create_inflation_map(image, path_referenceImage, inflation_coords, output_pa
 
 
 if __name__ == '__main__':
-    # Parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--outputRoot', help='Path to result_outputs directory')
-    args = parser.parse_args()
 
-    #Iterate through folders
-    folder_path = os.path.join(args.outputRoot, 'Processed_mapped')
-
-    for folder_name in os.listdir(folder_path):
-        subfolder_path = os.path.join(folder_path, folder_name)
-
-        if os.path.isdir(subfolder_path):
-
-            #File paths
-            tsv_file_path  = os.path.join(subfolder_path, 'gazeData_mapped.tsv')
-            # List all files in the folder
-            all_files = os.listdir(subfolder_path)
-            referenceImage_file = [os.path.join(subfolder_path, file) for file in all_files if (file.endswith('.jpeg') or file.endswith('.jpg') or file.endswith('.png'))]
-            path_referenceImage = referenceImage_file[0]
-
-            path_output = os.path.join(args.outputRoot, 'Final_results', folder_name)
-            output_path_density_map = os.path.join(path_output,  f'density_map_{folder_name}.jpeg')
-            output_path_expansion_map = os.path.join(path_output,  f'expansion_map_{folder_name}.jpeg')
-
-            print(f"Creating a density map for folder {folder_name}")
-            create_density_map(tsv_file_path, output_path_density_map, path_referenceImage, output_path_expansion_map)
-            #create_line_map(tsv_file_path, output_path_density_map)
-
+    if len(sys.argv)==5:
+        tsv_file_path = sys.argv[1]
+        output_path_density_map = sys.argv[2]
+        path_referenceImage = sys.argv[3]
+        output_path_expansion_map = sys.argv[4]
+        create_density_map(tsv_file_path, output_path_density_map, path_referenceImage, output_path_expansion_map)
+        
+    else:
+        print("Problem with arguments")
 
 
 

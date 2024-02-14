@@ -38,13 +38,13 @@ import logging
 import shutil
 import time
 import argparse
+import time
 
 import numpy as np
 import pandas as pd
 import cv2
 
 OPENCV3 = (cv2.__version__.split('.')[0] == '3')
-#print("OPENCV version " + cv2.__version__)
 
 
 def findMatches(img1_kp, img1_des, img2_kp, img2_des):
@@ -322,7 +322,7 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
             if processedFrame['foundGoodMatch']:
 
                 # grab the gaze data (world coords) for this frame
-                thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['frame_idx'] == frameCounter]
+                thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['MediaFrameIndex'] == frameCounter]
 
                 # project the reference image back into the video as a way to check for good mapping
                 ref2world_frame = projectImage2D(processedFrame['origFrame'], processedFrame['ref2world'], refImgColor)
@@ -330,12 +330,12 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
                 # loop over all gaze data for this frame, translate to different coordinate systems
                 for i, gazeRow in thisFrame_gazeData_world.iterrows():
 
-                    ts = gazeRow['timestamp']
-                    conf = gazeRow['confidence']
+                    ts = gazeRow['GazeTimeStamp']
+                    conf = gazeRow['Confidence']
 
                     # translate normalized gaze data to world pixel coords
-                    world_gazeX = gazeRow['norm_pos_x'] * processedFrame['frame_gray'].shape[1]
-                    world_gazeY = gazeRow['norm_pos_y'] * processedFrame['frame_gray'].shape[0]
+                    world_gazeX = gazeRow['Gaze2dX'] #* processedFrame['frame_gray'].shape[1]
+                    world_gazeY = gazeRow['Gaze2dY'] #* processedFrame['frame_gray'].shape[0]
 
                     # covert from world to reference image pixel coordinates
                     ref_gazeX, ref_gazeY = mapCoords2D((world_gazeX, world_gazeY), processedFrame['world2ref'])
@@ -454,8 +454,9 @@ def processFrame(frame, frameIdx, ref_kp, ref_des, featureDetect, total_frames):
     # try to match the frame and the reference image
     try:
         frame_kp, frame_des = featureDetect.detectAndCompute(frame_gray, None)
-        logger.info(f'Frame {frameIdx}/{total_frames}')
-        logger.info('found {} features on frame {}'.format(len(frame_kp), frameIdx))
+        if frameIdx%10==0:
+            logger.info(f'Frame {frameIdx}/{total_frames}')
+            #logger.info('found {} features on frame {}'.format(len(frame_kp), frameIdx))
 
         if len(frame_kp) < 2:
             ref_matchPts = None
@@ -470,8 +471,8 @@ def processFrame(frame, frameIdx, ref_kp, ref_des, featureDetect, total_frames):
             numMatches = ref_matchPts.shape[0]
 
             # if sufficient number of matches....
-            if numMatches > 10:
-                logger.info('found {} matches on frame {}'.format(numMatches, frameIdx))
+            if numMatches > 20:
+                #logger.info('found {} matches on frame {}'.format(numMatches, frameIdx))
                 sufficientMatches = True
             else:
                 logger.info('Insufficient matches ({}} matches) on frame {}'.format(numMatches, frameIdx))
@@ -503,9 +504,6 @@ def processFrame(frame, frameIdx, ref_kp, ref_des, featureDetect, total_frames):
 
 
 
-
-
-
 if __name__ == '__main__':
 
     if len(sys.argv)==5:
@@ -520,63 +518,6 @@ if __name__ == '__main__':
                                  referenceImage=path_referenceImage,
                                  outputDir=output_directory,
                                  nFrames = None)
-
+        
     else:
-
-        print("Finished processing folders for mapGaze.py...")
-
-
-
-    # # Parse arguments
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--outputRoot',help='Path to result_outputs directory')
-    # args = parser.parse_args()
-
-
-    # # Paths for files
-    # folder_path = os.path.join(args.outputRoot, 'Preprocessed_divided')
-
-    # for folder_name in os.listdir(folder_path):
-    #     subfolder_path = os.path.join(folder_path, folder_name) 
-
-    #     if os.path.isdir(subfolder_path):
-
-    #         # List all files in the folder
-    #         all_files = os.listdir(subfolder_path)
-
-    #         # Get paths of files
-    #         gazeData_file = [file for file in all_files if file.endswith('.tsv')]
-    #         path_gazeData = os.path.join(subfolder_path, gazeData_file[0])
-    #         worldCameraVid_file = [file for file in all_files if file.endswith('.mp4')]
-    #         path_worldCameraVid = os.path.join(subfolder_path, worldCameraVid_file[0])
-    #         referenceImage_file = [file for file in all_files if (file.endswith('.jpeg') or file.endswith('.jpg') or file.endswith('.png'))]
-    #         path_referenceImage = os.path.join(subfolder_path, referenceImage_file[0])
-
-    #         # Set output directory
-    #         output_directory = os.path.join(args.outputRoot, 'Processed_mapped', folder_name)
-    #         os.makedirs(output_directory, exist_ok=True)
-
-
-    #         # Input error checking
-    #         badInputs = []
-    #         for arg in [path_gazeData, path_worldCameraVid, path_referenceImage]:
-    #             if not os.path.exists(arg):
-    #                 badInputs.append(arg)
-    #         if len(badInputs) > 0:
-    #             #[print('{} does not exist! Check your input file path'.format(x)) for x in badInputs]
-    #             raise ValueError('{} does not exist! Check your input file path'.format(badInputs))
-    #             #sys.exit()
-
-
-    #         ## process the recording
-    #         print(f'processing the folder {folder_name}')
-    #         print('Output saved in: {}'.format(output_directory))
-
-    #         rrr = pd.read_table(path_gazeData, sep='\t')
-    #         print(rrr.head(4))
-
-
-    #         processRecording(gazeData=path_gazeData,
-    #                          worldCameraVid=path_worldCameraVid,
-    #                          referenceImage=path_referenceImage,
-    #                          outputDir=output_directory)
+        print("Problem with arguments")

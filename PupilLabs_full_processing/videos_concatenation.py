@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import argparse
 import os
+import sys
 
 
 def concatenate_videos(path_paintingVideo, path_glassesVideo, path_output_video):
@@ -66,30 +67,14 @@ def concatenate_videos(path_paintingVideo, path_glassesVideo, path_output_video)
 
 
 if __name__ == '__main__':
-    # Parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--outputRoot', help='Path to result_outputs directory')
-    args = parser.parse_args()
 
-    # Paths for files
-    folder_path = os.path.join(args.outputRoot , 'Processed_mapped')
-
-    #Iterate through folders
-    for folder_name in os.listdir(folder_path):
-        subfolder_path = os.path.join(folder_path, folder_name)
-
-        if os.path.isdir(subfolder_path):
-
-            path_paintingVideo = os.path.join(subfolder_path , 'ref_gaze.mp4')
-            path_glassesVideo = os.path.join(subfolder_path , 'world_gaze.mp4')
-
-            path_output = os.path.join(args.outputRoot, 'Final_results', folder_name)
-            os.makedirs(path_output, exist_ok=True)
-            path_output_video = os.path.join(path_output, f'Final_video_{folder_name}.mp4')
-
-            print(f"Concatenating videos from folder {folder_name}")
-
-            concatenate_videos(path_paintingVideo, path_glassesVideo, path_output_video)
-
+    if len(sys.argv)==4:
+        path_paintingVideo = sys.argv[1]
+        path_glassesVideo = sys.argv[2]
+        path_output_video = sys.argv[3]
+        concatenate_videos(path_paintingVideo, path_glassesVideo, path_output_video)
+        
+    else:
+        print("Problem with arguments")
 
 
