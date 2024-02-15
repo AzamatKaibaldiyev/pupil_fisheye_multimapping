@@ -51,8 +51,10 @@ pupilSourcePath = modules_dir
 #pupilSourcePath2 = '/Users/tombullock/Documents/Psychology/BOSS_Local/Pupil_Labs_Development/pupil_latest_src/pupil_src/shared_modules'
 
 #recording_path = ['/Users/tombullock/Documents/Psychology/BOSS_Local/Pupil_Labs_Development/Example_Files_PY']
-recording_path =  ['/Users/azamatkaibaldiyev/GREYC_project/Pupil_labs/pupil/recordings/2024_01_16/001']
-out_dir = '/.'
+recording_path =  ['/home/kaibald231/work_pupil/pupil_mobile/Test_recording/Video_batch_exp_intrin']
+output_folder = os.path.join(recording_path, 'batch_exports')
+os.makedirs(output_folder,exist_ok=True)
+out_dir = output_folder
 
 # export annotations
 annotations = True

@@ -45,11 +45,11 @@ def run_heatmap(folder_name, script_path, tsv_file_path, output_path_density_map
 
 if __name__ == '__main__':
 
-    run_video_cut = False
-    run_data_cut = False
-    run_gaze_map = False
-    run_video_concatenation = False
-    run_heatmap_expansion = True
+    run_video_cut = True #False
+    run_data_cut = True #False
+    run_gaze_map = True #False
+    run_video_concatenation = True #False
+    run_heatmap_expansion = True #False
 
     # DEFAULT PATHS
     # 1) 3 posters

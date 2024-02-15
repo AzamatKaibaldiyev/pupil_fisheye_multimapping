@@ -35,3 +35,7 @@ IMPORTANT: I had to comment out line 26 in "update_methods.py" [from video_captu
 to avoid having to install pyuvc (this caused problems when installing, and isn't needed for this batch export script to work)
 
 
+
+
+# IDEA
+For faster mapgaze - split each of the video into several parts and do mapgaze with multiprocessing too (maybe into 5 chunks), and then add parts back together

@@ -2,6 +2,10 @@
 gaze_multimapping for pupil glasses
 
 
+source /home/kaibald231/work_pupil/pupil/pupil_env/bin/activate
+
+
+
 # 2 choices
 
 ## Preprocessing
@@ -47,6 +51,9 @@ Test batch exporter
 
 ### For video cutting.py
 - try to reduce steps in video cutting
+
+- Create a dict with frame number and time  as kay value, go back 3 iterations(30 frames), and replace start frame and start time, same with end frame and end time (around 1 second from both sides) 
+
 
 ### For  mapgaze.py
  - remove video creation part for ref2worldmapping
