@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 
 def extract_and_save_gaze_data(gaze_file_path, json_folders):
 	# Load gaze data from the tsv file
-	gaze_data = pd.read_csv(gaze_file_path, delimiter='\t')
+	gaze_data = pd.read_csv(gaze_file_path)
 
 	# Iterate through subfolders in the specified gaze folder
 	for subfolder_name in os.listdir(json_folders):
@@ -28,9 +28,10 @@ def extract_and_save_gaze_data(gaze_file_path, json_folders):
 					end_frame = json_data['EndFrame']
 
 				# Filter gaze data based on frame_idx and frame range
-				filtered_gaze_data = gaze_data[(gaze_data['MediaFrameIndex'] >= start_frame) & (gaze_data['MediaFrameIndex'] <= end_frame)]
-				first_row_value = filtered_gaze_data['MediaFrameIndex'].iloc[0]
-				filtered_gaze_data['MediaFrameIndex'] = filtered_gaze_data['MediaFrameIndex'] - first_row_value
+				filtered_gaze_data = gaze_data[(gaze_data['world_index'] >= start_frame) & (gaze_data['world_index'] <= end_frame)]
+				filtered_gaze_data = filtered_gaze_data[filtered_gaze_data['confidence']>0.6]
+				first_row_value = filtered_gaze_data['world_index'].iloc[0]
+				filtered_gaze_data['world_index'] = filtered_gaze_data['world_index'] - first_row_value
 
 				# Save the filtered gaze data to a new tsv file
 				output_file_name = f"gazeData_{os.path.splitext(json_file_name)[0]}.tsv"
@@ -49,7 +50,7 @@ if __name__ == "__main__":
 	folder_path = os.path.join(args.outputRoot, 'Preprocessed')
 	json_folders_path = os.path.join(args.outputRoot, 'Preprocessed_divided')
 
-	gaze_file_path = os.path.abspath(os.path.join(args.outputRoot, '..', 'gaze.tlv'))
+	gaze_file_path = os.path.abspath(os.path.join(args.outputRoot,'..' ,'exports', '001_2D', 'gaze_positions.csv'))
 	print(gaze_file_path)
 
 	# Replace these paths with your actual paths

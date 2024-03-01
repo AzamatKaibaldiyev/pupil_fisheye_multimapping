@@ -8,6 +8,11 @@ import json
 import shutil
 import time
 import sys
+import datetime
+
+def milliseconds_to_hms(milliseconds):
+    return str(datetime.timedelta(milliseconds=milliseconds))
+
 
 def find_matches(kp1, des1, frame, sift, flann, img_name):
 
@@ -93,7 +98,9 @@ def save_video_portion(video_path, reference_image_path, output_folder, img_name
         "StartFrame": start_frame,
         "EndFrame": end_frame,
         "StartTimestamp": start_timestamp,
-        "EndTimestamp": end_timestamp
+        "EndTimestamp": end_timestamp,
+        "StartTime": milliseconds_to_hms(start_timestamp),
+        "EndTime": milliseconds_to_hms(end_timestamp)
     }
 
     with open(os.path.join(output_path, "frame_info.json"), "w") as info_file:
@@ -104,11 +111,15 @@ def save_video_portion(video_path, reference_image_path, output_folder, img_name
 
 
 
-def process_video(video_path, reference_image_path, output_folder):
+def process_video(video_path, reference_image_path, output_folder, start_frame=None):
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
     sift = cv2.SIFT_create()
+
+    # Set start frame position if provided
+    if start_frame is not None:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
     # Set up FLANN parameters
     FLANN_INDEX_KDTREE = 0    # before 1
@@ -120,9 +131,9 @@ def process_video(video_path, reference_image_path, output_folder):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # number of total frames in the video
     img_name = reference_image_path.split('/')[-1].split('.')[0]
     consecutive_matches_count = 0
-    consecutive_matches_threshold = 6  # Adjust this threshold as needed
+    consecutive_matches_threshold = 4  # Adjust this threshold as needed
     padding_frames = 0 # Extending purposes: number of frames to subtract from start of the video and add to end of the video
-    check_matches_every = 10
+    check_matches_every = 30 #check every number of frames
     start_frame = None
     end_frame = None
     start_timestamp = 0
@@ -153,10 +164,11 @@ def process_video(video_path, reference_image_path, output_folder):
             print(f"""
                   **************
                   {img_name}
-                  Frame: {current_frame}/{total_frames}""")
+                  Frame: {current_frame}/{total_frames}
+                  Number of matches: {num_matches}""")
 
             # Adjust the threshold as needed
-            if num_matches > 50:
+            if num_matches > 16:
                 # Count consecutive matches
                 consecutive_matches_count += 1
                 print(f"""
@@ -199,8 +211,10 @@ if __name__ == "__main__":
         video_path = sys.argv[1]
         reference_image = sys.argv[2]
         output_folder = sys.argv[3]
+        # Change the start frame or None
+        start_frame = None
 
-        process_video(video_path, reference_image, output_folder)
+        process_video(video_path, reference_image, output_folder, start_frame)
         
     else:
         print("Problem with arguments")

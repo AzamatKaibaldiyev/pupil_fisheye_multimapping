@@ -8,6 +8,14 @@ import sys
 import warnings
 warnings.filterwarnings("ignore")
 
+def run_mjpegs_to_mp4(script_path, input_folder):
+    """Function to execute the script with the provided arguments."""
+    start_time = time.time()
+    command = ['python', script_path] + [input_folder]
+    subprocess.run(command)
+    end_time = time.time()
+    print(f">>>>>>>>>>>>>>>>>>Concatenating and converting mjpegs to mp4 took: {end_time - start_time:.2f} seconds<<<<<<<<<<<<<<<<<<<<")
+
 
 def run_video_cutting(folder_name, script_path, video_path, reference_image_path, output_folder):
     """Function to execute the script with the provided arguments."""
@@ -45,16 +53,23 @@ def run_heatmap(folder_name, script_path, tsv_file_path, output_path_density_map
 
 if __name__ == '__main__':
 
-    run_video_cut = True #False
-    run_data_cut = True #False
-    run_gaze_map = True #False
-    run_video_concatenation = True #False
-    run_heatmap_expansion = True #False
+    run_mjpegs_mp4 = False
+    run_video_cut = False #False
+    run_data_cut = True #True #False
+    run_gaze_map = True #True #False
+    run_video_concatenation = False #True #False
+    run_heatmap_expansion = False #True #False
 
     # DEFAULT PATHS
     # 1) 3 posters
-    input_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/Test_video/exports/000/iMotions_12_02_2024_09_54_24/'
-    reference_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/reference_imgs/'
+    #input_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/Test_video/exports/000/iMotions_12_02_2024_09_54_24/'
+    #reference_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/reference_imgs/'
+    #2) museum_test_1
+    reference_default = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/references_museum1'
+    input_default  = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/20240223114840882'
+
+
+
     script_folder_path = os.getcwd()
 
     # Parse arguments
@@ -100,11 +115,23 @@ if __name__ == '__main__':
 
 
     total_start_time = time.time()
-    ############################################################
+    ##############################################################################################################
+    ### MJPEG VIDiOS CONCATENATION AND CONVERSION
+    script_path = os.path.join(args.scripts_folder, 'convert_mjpeg_to_mp4.py')
+    script_args_mjpeg_mp4 = [script_path, args.inputDir]
+
+    if run_mjpegs_mp4:
+        # Create and start a process for convert_mjpeg_to_mp4.py for each argument
+        print(f'convert_mjpeg_to_mp4.py starting to run')   
+        single_process = multiprocessing.Process(target=run_mjpegs_to_mp4, args=script_args_mjpeg_mp4)    
+        single_process.start()
+
+
+    ##############################################################################################################
     ### VIDEO CUTTING
     # Paths for files
     script_path = os.path.join(args.scripts_folder, 'video_cutting.py')
-    video_path = os.path.join(args.inputDir, 'scene.mp4')
+    video_path = os.path.join(args.inputDir, 'Converted_files/', 'converted_world.mp4')
     script_args_video_cutting = []
 
     # Set output directory
@@ -131,7 +158,7 @@ if __name__ == '__main__':
             process.join()
 
 
-    ############################################################
+    ##############################################################################################################
     ### GAZE DATA FILE CUTTING
     # Run the script and check the return code
     script_gazedata = 'gazeData_file_cutting.py'
@@ -150,7 +177,7 @@ if __name__ == '__main__':
             print(f"Script {script_gazedata} completed successfully._____________________________________________________________________________")
 
 
-    ############################################################
+    ##############################################################################################################
     ### GAZE MAPPING
     # Paths for files
     folder_path = os.path.join(output_results_directory, 'Preprocessed_divided')
@@ -203,7 +230,7 @@ if __name__ == '__main__':
             process.join()
 
 
-    ############################################################
+    ##############################################################################################################
     ### CONCATENATION AND HEATMAP
     # Paths for files
     folder_path = os.path.join(output_results_directory , 'Processed_mapped')

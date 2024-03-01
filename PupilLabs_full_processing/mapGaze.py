@@ -322,7 +322,7 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
             if processedFrame['foundGoodMatch']:
 
                 # grab the gaze data (world coords) for this frame
-                thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['MediaFrameIndex'] == frameCounter]
+                thisFrame_gazeData_world = gazeWorld_df.loc[gazeWorld_df['world_index'] == frameCounter]
 
                 # project the reference image back into the video as a way to check for good mapping
                 ref2world_frame = projectImage2D(processedFrame['origFrame'], processedFrame['ref2world'], refImgColor)
@@ -330,12 +330,13 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
                 # loop over all gaze data for this frame, translate to different coordinate systems
                 for i, gazeRow in thisFrame_gazeData_world.iterrows():
 
-                    ts = gazeRow['GazeTimeStamp']
-                    conf = gazeRow['Confidence']
+                    ts = gazeRow['gaze_timestamp']
+                    conf = gazeRow['confidence']
 
                     # translate normalized gaze data to world pixel coords
-                    world_gazeX = gazeRow['Gaze2dX'] #* processedFrame['frame_gray'].shape[1]
-                    world_gazeY = gazeRow['Gaze2dY'] #* processedFrame['frame_gray'].shape[0]
+                    world_gazeX = gazeRow['norm_pos_x'] * processedFrame['frame_gray'].shape[1]
+                    world_gazeY = (1-gazeRow['norm_pos_y']) * processedFrame['frame_gray'].shape[0]
+
 
                     # covert from world to reference image pixel coordinates
                     ref_gazeX, ref_gazeY = mapCoords2D((world_gazeX, world_gazeY), processedFrame['world2ref'])
@@ -471,8 +472,8 @@ def processFrame(frame, frameIdx, ref_kp, ref_des, featureDetect, total_frames):
             numMatches = ref_matchPts.shape[0]
 
             # if sufficient number of matches....
-            if numMatches > 20:
-                #logger.info('found {} matches on frame {}'.format(numMatches, frameIdx))
+            if numMatches > 10:
+                #logger.info('found {} matches on frame {}'.        format(numMatches, frameIdx))
                 sufficientMatches = True
             else:
                 logger.info('Insufficient matches ({}} matches) on frame {}'.format(numMatches, frameIdx))
