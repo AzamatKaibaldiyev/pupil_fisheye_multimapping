@@ -357,13 +357,17 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
                     else:
                         gazeMapped_df = thisRow_df
 
-                    ### Draw gaze circles on frames
-                    if i == thisFrame_gazeData_world.index.max():
-                        dotColor = [96, 52, 234]            # pinkish/red
-                        dotSize = 12
-                    else:
-                        dotColor = [168, 231, 86]            # minty green
-                        dotSize = 8
+                    # ### Draw gaze circles on frames
+                    # if i == thisFrame_gazeData_world.index.max():
+                    #     dotColor = [96, 52, 234]            # pinkish/red
+                    #     dotSize = 12
+                    # else:
+                    #     dotColor = [168, 231, 86]            # minty green
+                    #     dotSize = 8
+
+                    dotColor = [0, 255, 0]            #green
+                    dotSize = 6
+                    
 
                     # world frame
                     cv2.circle(frame,
@@ -371,8 +375,10 @@ def processRecording(gazeData=None, worldCameraVid=None, referenceImage=None, ou
                                dotSize,
                                dotColor,
                                -1)
-
+                    
+                    
                     # ref frame
+                    dotSize = 12
                     cv2.circle(ref_frame,
                                (int(ref_gazeX), int(ref_gazeY)),
                                dotSize,

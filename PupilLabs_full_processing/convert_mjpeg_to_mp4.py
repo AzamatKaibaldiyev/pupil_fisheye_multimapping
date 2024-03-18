@@ -10,10 +10,14 @@ def merge_npy_files(input_folder):
         
     # Get a list of all files in the folder
     world_files_in_folder = os.listdir(input_folder)
-    matching_npy_files = [file for file in world_files_in_folder if file.startswith('world') and file.endswith('timestamps.npy')]
+    npy_files = sorted([file for file in world_files_in_folder if file.startswith('world') and file.endswith('timestamps.npy')])
+    # Sort them correctly
+    matching_npy_files = []
+    matching_npy_files.append(npy_files[-1])
+    [matching_npy_files.append(file) for file in npy_files[:-1]]
 
     # Load each .npy file
-    arrays = [np.load(os.path.join(input_folder, file)) for file in matching_npy_files]
+    arrays = [np.load(os.path.join(input_folder, file)) for file in (matching_npy_files)]
 
     # Concatenate the arrays along the specified axis (change axis according to your data)
     merged_array = np.concatenate(arrays, axis=0)
@@ -129,21 +133,22 @@ def concat_convert_videos(video_paths, timestamps, output_folder_path):
 
 if __name__ == '__main__':
 
-    if len(sys.argv)==2:
+    if len(sys.argv)==3:
 
             input_folder= sys.argv[1]
+            path_merged_files = sys.argv[2]
 
             #Check if you have one or several world mjpeg videos
             world_files_in_folder = os.listdir(input_folder)
             matching_mjpeg_files = [file for file in world_files_in_folder if file.startswith('world') and file.endswith('.mjpeg')]
             multiple_videos = False
             if len(matching_mjpeg_files)>1:
+                print("There are multiple videos in this folder")
                 multiple_videos = True
 
-            # Create a folder for merged and converted data
-            path_merged_files = os.path.join(input_folder, 'Converted_files')
             os.makedirs(path_merged_files, exist_ok=True)
             if multiple_videos:
+                print('Multiple timestamp files')
                 world_timestamps = merge_npy_files(input_folder)
             else:
                 data = np.load(os.path.join(input_folder , 'world_timestamps.npy'))

@@ -8,10 +8,10 @@ import sys
 import warnings
 warnings.filterwarnings("ignore")
 
-def run_mjpegs_to_mp4(script_path, input_folder):
+def run_mjpegs_to_mp4(script_path, input_folder, output_path):
     """Function to execute the script with the provided arguments."""
     start_time = time.time()
-    command = ['python', script_path] + [input_folder]
+    command = ['python', script_path] + [input_folder, output_path]
     subprocess.run(command)
     end_time = time.time()
     print(f">>>>>>>>>>>>>>>>>>Concatenating and converting mjpegs to mp4 took: {end_time - start_time:.2f} seconds<<<<<<<<<<<<<<<<<<<<")
@@ -55,29 +55,39 @@ if __name__ == '__main__':
 
     run_mjpegs_mp4 = False
     run_video_cut = False #False
-    run_data_cut = True #True #False
-    run_gaze_map = True #True #False
-    run_video_concatenation = False #True #False
-    run_heatmap_expansion = False #True #False
+    run_data_cut = False #True #False
+    run_gaze_map = False #False
+    run_video_concatenation = False #False
+    run_heatmap_expansion = False #False
+    # If audio file is present
+    run_audio_processing = True
 
     # DEFAULT PATHS
     # 1) 3 posters
     #input_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/Test_video/exports/000/iMotions_12_02_2024_09_54_24/'
     #reference_default = '/home/kaibald231/work_pupil/pupil_mobile/Test_recording/reference_imgs/'
-    #2) museum_test_1
-    reference_default = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/references_museum1'
-    input_default  = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/20240223114840882'
+    # 2) museum_test_1
+    # reference_default = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/references_museum1'
+    # input_default  = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test/20240223114840882'
+
+    # 3) museum test 2
+    input_default = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test_2/20240308144312223/exports/000'
+    reference_default = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test_2/Reference_images'
+    microphone_audio_path = '/home/kaibald231/work_pupil/pupil_mobile/s20_museum_test_2/20240308144312223/microphone_audio/200115_001.WAV'
 
 
 
+
+
+    
     script_folder_path = os.getcwd()
-
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--inputDir', help = 'Input directory of pupil recordings and data', default = input_default)
     parser.add_argument('--referenceDir', help = 'Path to folder with the reference images', default  = reference_default)
     parser.add_argument('--outputRoot', help = 'Path to where output data is saved to')
     parser.add_argument('--scripts_folder',help = 'Path to scripts folder',  default = script_folder_path)
+    parser.add_argument('--microphone_audio', help = 'PAth to the microphone audio', default = microphone_audio_path)
     args = parser.parse_args()
 
     # Check if input directory is provided
@@ -113,12 +123,15 @@ if __name__ == '__main__':
     output_results_directory = os.path.join(args.outputRoot, 'Result_outputs')
     os.makedirs(output_results_directory, exist_ok=True)
 
+    # General folder containing raw recording data
+    general_recording_folder = args.inputDir.split('exports')[0]
 
     total_start_time = time.time()
     ##############################################################################################################
     ### MJPEG VIDiOS CONCATENATION AND CONVERSION
     script_path = os.path.join(args.scripts_folder, 'convert_mjpeg_to_mp4.py')
-    script_args_mjpeg_mp4 = [script_path, args.inputDir]
+    path_merged_files = os.path.join(general_recording_folder, 'Converted_files')
+    script_args_mjpeg_mp4 = [script_path, general_recording_folder, path_merged_files]
 
     if run_mjpegs_mp4:
         # Create and start a process for convert_mjpeg_to_mp4.py for each argument
@@ -131,11 +144,11 @@ if __name__ == '__main__':
     ### VIDEO CUTTING
     # Paths for files
     script_path = os.path.join(args.scripts_folder, 'video_cutting.py')
-    video_path = os.path.join(args.inputDir, 'Converted_files/', 'converted_world.mp4')
+    video_path = os.path.join(path_merged_files, 'converted_world.mp4')
     script_args_video_cutting = []
 
     # Set output directory
-    output_folder = os.path.join(output_results_directory, 'Preprocessed_divided')
+    output_folder = os.path.join(path_merged_files, 'Preprocessed_divided')
     os.makedirs(output_folder, exist_ok=True)    
 
     # Load reference images from the specified folder
@@ -163,7 +176,7 @@ if __name__ == '__main__':
     # Run the script and check the return code
     script_gazedata = 'gazeData_file_cutting.py'
     script_gazedata_path = os.path.join(args.scripts_folder, script_gazedata)
-    command = ['python', script_gazedata] + ['--outputRoot', output_results_directory]
+    command = ['python', script_gazedata] + ['--outputRoot', path_merged_files, '--inputFolder', args.inputDir]
     
     if run_data_cut:
         print(f"Launching script {script_gazedata}.__________________________________________________________________________________________")
@@ -180,7 +193,7 @@ if __name__ == '__main__':
     ##############################################################################################################
     ### GAZE MAPPING
     # Paths for files
-    folder_path = os.path.join(output_results_directory, 'Preprocessed_divided')
+    folder_path = os.path.join(path_merged_files, 'Preprocessed_divided')
     script_path = os.path.join(args.scripts_folder, 'mapGaze.py')
     script_args_mapgaze = []
 
@@ -289,6 +302,30 @@ if __name__ == '__main__':
         for process in processes:
             process.join()
 
+    
+    ##############################################################################################################
+    ### AUDIO SYNC, TRANSCRIPTION and SUBTITLES
+    import subprocess
+
+    if run_audio_processing:
+        # if no path provided, then check inside the general folder
+        if args.microphone_audio is not None:
+            microphone_audio_file = args.microphone_audio
+        else:
+            microphone_audio_file = [os.path.join(general_recording_folder, file) for file in os.listdir(general_recording_folder) if
+                                     file.endswith('.WAV')][0]
+        
+        if os.path.exists(microphone_audio_file):
+            audio_processing_script = os.path.join(args.scripts_folder, 'audio_processing.py')
+            # Command to run the other Python script
+            command = ["python", audio_processing_script] + [args.inputDir, general_recording_folder, microphone_audio_file]
+            # Run the command
+            subprocess.run(command)
+
+        else:
+            print('The microphone audio file is not found')
+
+    
     total_end_time = time.time()
     print("Total execution time: {} seconds", total_end_time-total_start_time)
 

@@ -44,13 +44,13 @@ if __name__ == "__main__":
 	# Parse arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--outputRoot',help='Path to result_outputs directory')
+	parser.add_argument('--inputFolder',help='Path to result_outputs directory')
 	args = parser.parse_args()
 
 	# Paths for files
-	folder_path = os.path.join(args.outputRoot, 'Preprocessed')
 	json_folders_path = os.path.join(args.outputRoot, 'Preprocessed_divided')
 
-	gaze_file_path = os.path.abspath(os.path.join(args.outputRoot,'..' ,'exports', '001_2D', 'gaze_positions.csv'))
+	gaze_file_path = os.path.join(args.inputFolder, 'gaze_positions.csv')
 	print(gaze_file_path)
 
 	# Replace these paths with your actual paths

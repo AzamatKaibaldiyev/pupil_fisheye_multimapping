@@ -179,7 +179,7 @@ def create_inflation_map(image, path_referenceImage, inflation_coords, output_pa
         new_height = height + 2 * increase_height
         new_image = Image(width=new_width, height=new_height, background=Color("white"))
 
-        ratio_size =  width/new_width * 0.85
+        ratio_size =  width/new_width * 0.6
         print(ratio_size)
 
         # Composite the original image onto the new image

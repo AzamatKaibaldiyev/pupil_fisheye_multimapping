@@ -2,13 +2,11 @@ import cv2
 import numpy as np
 import os
 from datetime import datetime
-import argparse
-from PIL import Image
 import json
 import shutil
-import time
 import sys
 import datetime
+import math
 
 def milliseconds_to_hms(milliseconds):
     return str(datetime.timedelta(milliseconds=milliseconds))
@@ -41,7 +39,7 @@ def find_matches(kp1, des1, frame, sift, flann, img_name):
 
         #print('{img_name} Number of good matches: ', len(good_matches))
     except Exception as e:
-        print(f"An error occurred, on number of good matches: {e}")
+        #print(f"An error occurred, on number of good matches: {e}")
         good_matches = [0]
 
     return len(good_matches)
@@ -88,19 +86,24 @@ def save_video_portion(video_path, reference_image_path, output_folder, img_name
     cap.release()
     writer.release()
 
-    print(f"Frames saved from {start_frame} to {end_frame}")
-    print(f"Timestamp from {start_timestamp} ms to {end_timestamp} ms")
-    print("Total number of frames: ", len(output_frames))
+    print(f"""
+          Frames saved from {start_frame} to {end_frame}"
+          Timestamp from {start_timestamp} ms to {end_timestamp} ms
+          Total number of frames: {len(output_frames)}
+          TotalTime: {milliseconds_to_hms(end_timestamp-start_timestamp)}
+          """)
 
     # Save frame information to a JSON file
     frame_info = {
         "ReferenceImageIndex": img_name,
         "StartFrame": start_frame,
         "EndFrame": end_frame,
+        "TotalFrames": len(output_frames),
         "StartTimestamp": start_timestamp,
         "EndTimestamp": end_timestamp,
         "StartTime": milliseconds_to_hms(start_timestamp),
-        "EndTime": milliseconds_to_hms(end_timestamp)
+        "EndTime": milliseconds_to_hms(end_timestamp),
+        "TotalTime": milliseconds_to_hms(end_timestamp-start_timestamp)
     }
 
     with open(os.path.join(output_path, "frame_info.json"), "w") as info_file:
@@ -134,6 +137,7 @@ def process_video(video_path, reference_image_path, output_folder, start_frame=N
     consecutive_matches_threshold = 4  # Adjust this threshold as needed
     padding_frames = 0 # Extending purposes: number of frames to subtract from start of the video and add to end of the video
     check_matches_every = 30 #check every number of frames
+    num_matches_threshold = 16
     start_frame = None
     end_frame = None
     start_timestamp = 0
@@ -161,21 +165,22 @@ def process_video(video_path, reference_image_path, output_folder, start_frame=N
             current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
 
             # Print the current frame number and total number of frames
-            print(f"""
-                  **************
-                  {img_name}
-                  Frame: {current_frame}/{total_frames}
-                  Number of matches: {num_matches}""")
+            # print(f"""
+            #       **************
+            #       {img_name}
+            #       Frame: {current_frame}/{total_frames}
+            #       Number of matches: {num_matches}""")
 
             # Adjust the threshold as needed
-            if num_matches > 16:
+            if num_matches > num_matches_threshold:
                 # Count consecutive matches
                 consecutive_matches_count += 1
-                print(f"""
-                      ___________________________
-                      {img_name} 
-                      Number of good matches: {num_matches})
-                      Consecutive matches: {consecutive_matches_count}""")
+                # print(f"""
+                #       ___________________________
+                #       {img_name} 
+                #       Frame: {current_frame}/{total_frames}
+                #       Number of good matches: {num_matches})
+                #       Consecutive matches: {consecutive_matches_count}""")
 
                 # If consecutive matches exceed the threshold, consider it a valid transition
                 if consecutive_matches_count >= consecutive_matches_threshold:
@@ -184,7 +189,9 @@ def process_video(video_path, reference_image_path, output_folder, start_frame=N
                         if current_frame>padding_frames:
                             offset = check_matches_every * consecutive_matches_threshold
                             start_frame = current_frame - offset #- padding_frames
-                            start_timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) - offset/cap.get(cv2.CAP_PROP_FPS)#- padding_frames / cap.get(cv2.CAP_PROP_FPS)
+                            start_timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) - 1000*offset/math.ceil(cap.get(cv2.CAP_PROP_FPS))#- padding_frames / cap.get(cv2.CAP_PROP_FPS)
+                            print(f"Offset time: {offset/cap.get(cv2.CAP_PROP_FPS)}")
+
                         else:
                             start_frame = 0 
                             start_timestamp = 0
